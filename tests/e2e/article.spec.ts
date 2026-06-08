@@ -27,9 +27,10 @@ test("article renders MDX prose and an interactive simulator island", async ({
   });
 });
 
-test("home page lists the article and links to it", async ({ page }) => {
+test("landing page links into the article via the nav", async ({ page }) => {
   await page.goto("/");
-  const link = page.getByRole("link", { name: /Market Structure/ });
+  const link = page.getByRole("link", { name: /Articles/i });
+  await link.scrollIntoViewIfNeeded();
   await expect(link).toBeVisible();
   await link.click();
   await expect(page).toHaveURL(/\/articles\/market-structure$/);

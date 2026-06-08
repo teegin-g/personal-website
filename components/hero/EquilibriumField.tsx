@@ -171,7 +171,7 @@ export function EquilibriumField({ progressRef }: Props) {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="fixed inset-0 -z-10 h-screen w-screen"
+      className="pointer-events-none fixed inset-0 z-0 h-screen w-screen"
     />
   );
 }

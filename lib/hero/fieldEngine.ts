@@ -105,8 +105,13 @@ export function stepField(field: Field, input: StepInput): Field {
   const damping = 0.9;
 
   for (const a of field.agents) {
+    // Settle into a band around the line, not a 1px wire: each agent keeps a
+    // stable per-agent offset plus a slow wave, so the cloud has depth.
+    const band = field.height * 0.055;
     const target =
-      eqY + Math.sin(a.x * 0.01 + field.t + a.phase) * (field.height * 0.012);
+      eqY +
+      Math.cos(a.phase * 3) * band +
+      Math.sin(a.x * 0.01 + field.t + a.phase) * (field.height * 0.018);
     // chaos drift when progress is low
     const chaos = (1 - Math.min(1, progress * 2)) * 0.15;
     a.vy += (target - a.y) * pull * dt;

@@ -1,0 +1,31 @@
+- generic [active] [ref=e1]:
+  - button "Switch to ledger theme" [ref=e2] [cursor=pointer]: night
+  - main [ref=e3]:
+    - generic [ref=e5]:
+      - paragraph [ref=e6]: Exploration · Systems · Motion
+      - heading "Teegin Groves" [level=1] [ref=e7]
+      - paragraph [ref=e8]: I build things that make complex systems feel intuitive. Move your cursor through the field, then scroll.
+    - generic [ref=e10]:
+      - paragraph [ref=e11]: What I do
+      - heading "Markets find their level. I make that visible." [level=2] [ref=e12]
+      - generic [ref=e13]: Most of my work turns messy economic behavior into something you can poke at and understand. Drag the field and watch it re-settle.
+      - paragraph [ref=e14]: price → equilibrium · drag to shock
+    - generic [ref=e16]:
+      - paragraph [ref=e17]: How it connects
+      - heading "Order isn't imposed. It emerges." [level=2] [ref=e18]
+      - generic [ref=e19]: Out of independent decisions, structure appears. That's the thread running through everything here.
+    - generic [ref=e20]:
+      - paragraph [ref=e21]: Where to go
+      - navigation [ref=e22]:
+        - link "Articles Interactive essays on how systems work" [ref=e23] [cursor=pointer]:
+          - /url: /articles/market-structure
+          - generic [ref=e24]: Articles
+          - generic [ref=e25]: Interactive essays on how systems work
+        - link "Projects Things I've built" [ref=e26] [cursor=pointer]:
+          - /url: /projects
+          - generic [ref=e27]: Projects
+          - generic [ref=e28]: Things I've built
+        - link "Follow New writing in your inbox" [ref=e29] [cursor=pointer]:
+          - /url: https://substack.com
+          - generic [ref=e30]: Follow
+          - generic [ref=e31]: New writing in your inbox

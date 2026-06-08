@@ -34,7 +34,7 @@ export function Beat({
         whileInView={whileInView}
         viewport={{ once: false, amount: 0.5 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-2xl"
+        className="copy-scrim max-w-2xl"
       >
         <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-accent">
           {eyebrow}
