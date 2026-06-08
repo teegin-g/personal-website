@@ -7,6 +7,10 @@
       "command": "npx tsc --noEmit"
     },
     {
+      "name": "build",
+      "command": "npm run build"
+    },
+    {
       "name": "unit",
       "command": "npx vitest run"
     },
