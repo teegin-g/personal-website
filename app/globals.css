@@ -62,11 +62,15 @@ body {
   inset: -10% -8%;
   z-index: 0;
   pointer-events: none;
+  /* Anchored slightly left of center but held opaque well past the copy's
+     right edge, so the full text column stays legible where a bright mesh
+     crest crosses it (not just the left ~40%). */
   background: radial-gradient(
-    115% 90% at 18% 50%,
+    150% 105% at 35% 50%,
     var(--bg) 0%,
-    color-mix(in oklab, var(--bg) 72%, transparent) 48%,
-    transparent 78%
+    color-mix(in oklab, var(--bg) 90%, transparent) 60%,
+    color-mix(in oklab, var(--bg) 55%, transparent) 80%,
+    transparent 100%
   );
 }
 

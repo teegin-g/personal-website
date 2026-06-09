@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { EquilibriumField } from "@/components/hero/EquilibriumField";
+import { EquilibriumSurface } from "@/components/hero/EquilibriumSurface";
 
 const CANVAS_KEY = "tg-index-canvas";
 
-/** Settled value: sits the field in its equilibrium state with links faintly
- *  emerging (the engine's link threshold is 0.6), so the backdrop reads as a
- *  quiet living network rather than the hero's full scroll narrative. */
+/** Settled value: sits the surface in its equilibrium state (valleys bloomed,
+ *  links faintly emerging), so the backdrop reads as a quiet living relief
+ *  rather than the hero's full scroll narrative. */
 const CALM_PROGRESS = 0.62;
 
 function isOn(stored: string | null): boolean {
@@ -18,11 +18,11 @@ function isOn(stored: string | null): boolean {
 /**
  * Calm canvas backdrop for the articles index plus a persisted on/off toggle.
  *
- * The index does not scroll-narrate, so we feed EquilibriumField a fixed
- * progress ref pinned at its settled value (never wired to scroll). Cursor
- * gravity stays live inside the field, giving a gently alive backdrop.
+ * The index does not scroll-narrate, so we feed EquilibriumSurface a fixed
+ * progress ref pinned at its settled value (never wired to scroll). Pointer
+ * interaction stays live inside the surface, giving a gently alive backdrop.
  *
- * When OFF, EquilibriumField is unmounted entirely, so its effect cleanup
+ * When OFF, EquilibriumSurface is unmounted entirely, so its effect cleanup
  * cancels the rAF loop and removes its listeners. The page background (`bg`)
  * shows through as a quiet static backdrop. The preference persists in
  * localStorage and is resolved in an effect to stay hydration-safe.
@@ -49,7 +49,7 @@ export function IndexCanvas() {
     <>
       {enabled && (
         <div aria-hidden="true">
-          <EquilibriumField progressRef={progressRef} />
+          <EquilibriumSurface progressRef={progressRef} />
         </div>
       )}
       <button

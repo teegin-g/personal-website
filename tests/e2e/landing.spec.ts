@@ -60,6 +60,10 @@ test("reduced motion: content fully visible, no animation gating", async ({
 
 test("keyboard navigation reaches the nav links", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("link", { name: /Articles/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Follow/i })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Articles/i }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Substack/i }).first(),
+  ).toBeVisible();
 });
