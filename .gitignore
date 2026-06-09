@@ -22,3 +22,6 @@ next-env.d.ts
 
 # playwright MCP scratch output
 .playwright-mcp/
+
+# git worktrees (isolated workspaces)
+/.worktrees/
