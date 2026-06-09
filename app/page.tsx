@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { EquilibriumField } from "@/components/hero/EquilibriumField";
+import { EquilibriumSurface } from "@/components/hero/EquilibriumSurface";
 import { Beat } from "@/components/hero/Beat";
-import { LandingNav } from "@/components/hero/LandingNav";
+import { About } from "@/components/sections/About";
+import { Work } from "@/components/sections/Work";
+import { Close } from "@/components/sections/Close";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { scrollToProgress } from "@/lib/hero/scrollProgress";
 
@@ -26,7 +28,7 @@ export default function Home() {
   return (
     <>
       <ThemeToggle />
-      <EquilibriumField progressRef={progressRef} />
+      <EquilibriumSurface progressRef={progressRef} />
       <main className="relative z-10">
         {/* Beat 1 — arrival / who */}
         <section className="flex min-h-screen flex-col justify-center px-[8vw]">
@@ -64,7 +66,9 @@ export default function Home() {
           running through everything here.
         </Beat>
 
-        <LandingNav />
+        <About />
+        <Work />
+        <Close />
       </main>
     </>
   );
