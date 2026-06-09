@@ -19,3 +19,6 @@ next-env.d.ts
 
 # brainstorming visual companion
 .superpowers/
+
+# playwright MCP scratch output
+.playwright-mcp/
