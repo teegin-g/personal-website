@@ -9,11 +9,14 @@ import { expect, test, type Page } from "@playwright/test";
 const SHOTS = "evals/runs/latest/bundle/screenshots";
 
 async function setTheme(page: Page, theme: "phosphor" | "ledger") {
-  const current = await page.locator("html").getAttribute("data-theme");
-  if (current !== theme) {
-    await page.getByRole("button", { name: /Switch to/i }).click();
-    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-  }
+  // Pin the theme deterministically. ThemeProvider resolves from
+  // prefers-color-scheme shortly after hydration (headless Chromium reports
+  // `light`, flipping to ledger a beat after load), so clicking the toggle
+  // races that resolve. Persisting tg-theme and reloading forces a known state
+  // regardless of the color-scheme default.
+  await page.evaluate((t) => window.localStorage.setItem("tg-theme", t), theme);
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 }
 
 /**

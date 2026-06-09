@@ -25,17 +25,22 @@ test("scrolling reveals later beats", async ({ page }) => {
 test("theme toggle flips palette and persists across reload", async ({
   page,
 }) => {
+  // Pin the starting theme so the test does not race ThemeProvider's
+  // post-hydration prefers-color-scheme resolve (headless Chromium reports
+  // `light`, which would flip the page to ledger a beat after load).
+  await page.addInitScript(() => {
+    window.localStorage.setItem("tg-theme", "phosphor");
+  });
   await page.goto("/");
   const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-theme", "phosphor");
   const toggle = page.getByRole("button", { name: /Switch to/i });
   // Wait for hydration so the toggle's click handler is wired.
   await expect(toggle).toBeVisible();
-  const start = await html.getAttribute("data-theme");
-  const target = start === "phosphor" ? "ledger" : "phosphor";
   await toggle.click();
-  await expect(html).toHaveAttribute("data-theme", target);
+  await expect(html).toHaveAttribute("data-theme", "ledger");
   await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", target);
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "ledger");
   mkdirSync(SHOTS, { recursive: true });
   await page.screenshot({ path: `${SHOTS}/landing-day.png`, fullPage: false });
 });
