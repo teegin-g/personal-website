@@ -27,11 +27,14 @@ test("theme toggle flips palette and persists across reload", async ({
 }) => {
   // Pin the starting theme so the test does not race ThemeProvider's
   // post-hydration prefers-color-scheme resolve (headless Chromium reports
-  // `light`, which would flip the page to ledger a beat after load).
-  await page.addInitScript(() => {
-    window.localStorage.setItem("tg-theme", "phosphor");
-  });
+  // `light`, which would flip the page to ledger a beat after load). Seed
+  // localStorage then reload once; this is a one-shot (not an addInitScript,
+  // which would re-run on the later reload and clobber the toggled value).
   await page.goto("/");
+  await page.evaluate(() =>
+    window.localStorage.setItem("tg-theme", "phosphor"),
+  );
+  await page.reload();
   const html = page.locator("html");
   await expect(html).toHaveAttribute("data-theme", "phosphor");
   const toggle = page.getByRole("button", { name: /Switch to/i });
@@ -39,6 +42,7 @@ test("theme toggle flips palette and persists across reload", async ({
   await expect(toggle).toBeVisible();
   await toggle.click();
   await expect(html).toHaveAttribute("data-theme", "ledger");
+  // Reload must preserve the toggled theme (persistence via localStorage).
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "ledger");
   mkdirSync(SHOTS, { recursive: true });
