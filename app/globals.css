@@ -68,6 +68,19 @@ body {
   );
 }
 
+/* Full-bleed breakout for figures (esp. simulators) that need to escape the
+   reading measure and span a wide instrument area. The container lives in
+   normal flow inside the centered reading column; this rule pulls it out to
+   the viewport edges. We derive the viewport width from the documentElement
+   client width (which EXCLUDES the scrollbar) via --vw, falling back to 100vw,
+   so the breakout never introduces a horizontal scrollbar. An inner wrapper
+   re-applies a sane max-width and horizontal padding. */
+.article-bleed {
+  width: var(--vw, 100vw);
+  margin-left: calc(50% - (var(--vw, 100vw) / 2));
+  margin-right: calc(50% - (var(--vw, 100vw) / 2));
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
