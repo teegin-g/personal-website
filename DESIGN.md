@@ -3,8 +3,8 @@
 Visual system for the personal site. Captures the tokens and conventions actually shipped
 in the landing hero (`app/`, `components/`, `lib/`). Two first-class themes; all colors in
 OKLCH. Tokens live in `app/globals.css` (CSS vars) and are mapped to Tailwind in
-`tailwind.config.ts`. The canvas renderer mirrors them as literal RGBA in
-`components/hero/EquilibriumField.tsx` (`THEME_COLORS`) — keep the two in sync.
+`tailwind.config.ts`. The WebGL renderer mirrors them as literal RGBA in
+`components/hero/EquilibriumSurface.tsx` (`THEME_COLORS`), keep the two in sync.
 
 ## Color
 
@@ -61,17 +61,29 @@ Hero display clamp: `clamp(2.5rem, 8vw, 6rem)` (ceiling ≤ 6rem). Beat headings
 - Persistent fixed canvas at `z-0`; content in `main` at `z-10`; theme toggle fixed at
   `z-50` top-right.
 - Copy that overlaps the canvas uses the `.copy-scrim` utility (a radial vignette of the
-  bg behind text) for legibility — not a card, not glass.
-- Mobile-first; agent count and effects tier down by viewport width in `EquilibriumField`.
+  bg behind text) for legibility, not a card, not glass.
+- Mobile-first; mesh resolution, agent count and effects tier down by viewport width in
+  `EquilibriumSurface`.
 
 ## Components
 
-- `components/hero/EquilibriumField.tsx` — `"use client"` canvas renderer; thin loop over
-  the pure engine in `lib/hero/fieldEngine.ts`. Reads scroll progress + pointer from refs;
-  no per-frame React render.
+- `components/hero/EquilibriumSurface.tsx` — `"use client"` three.js (WebGL) renderer for
+  the "Settling Surface" hero; a displaced saddle mesh whose vertex shader mirrors the pure
+  `lib/hero/surfaceEngine.ts` `heightAt` exactly, with agent points and emergent links. three
+  is dynamically imported; WebGL-unsupported / context-lost falls back to a 2D settled frame;
+  reduced motion draws one static frame. Reads scroll progress + pointer from refs; no
+  per-frame React render.
+- `lib/hero/surfaceEngine.ts` — pure, framework-agnostic height field (saddle equilibrium,
+  chaos morph, cursor wells, shocks, settledness scalar). Single source of truth the shader
+  mirrors; unit-tested.
 - `components/hero/Beat.tsx` — one narrative beat (eyebrow + display heading + body +
   optional mono readout). framer-motion reveal, reduced-motion-safe.
-- `components/hero/LandingNav.tsx` — semantic `<footer>`/`<nav>` landing zone.
+- `components/sections/About.tsx` — portrait + first-person intro; the "Substack" word is the
+  soft-link CTA.
+- `components/sections/Work.tsx` — featured essay + lazy-mounted live simulator previews +
+  "Projects: coming soon".
+- `components/sections/Close.tsx` — semantic `<footer>`/`<nav>` closing zone with the real
+  contact destinations.
 - `components/theme/ThemeProvider.tsx` + `ThemeToggle.tsx` — theme state, persistence,
   `prefers-color-scheme`.
 - `components/ui/*` (button, card) — shadcn primitives used by the article simulators.
@@ -86,7 +98,8 @@ Hero display clamp: `clamp(2.5rem, 8vw, 6rem)` (ceiling ≤ 6rem). Beat headings
 
 ## Testing & gates
 
-- Pure logic (`fieldEngine`, `scrollProgress`, `resolveTheme`) is unit-tested (Vitest).
+- Pure logic (`surfaceEngine`, `fieldEngine`, `scrollProgress`, `resolveTheme`) is
+  unit-tested (Vitest).
 - Behavior is Playwright-tested (`tests/e2e/landing.spec.ts`).
 - Completion gate: `node evals/judge.mjs --all` must return `done`. Deterministic gates
   (typecheck, build, unit, e2e) are in `evals/checks.json`.
