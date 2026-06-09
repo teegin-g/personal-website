@@ -1,29 +1,57 @@
+import { ArticleShell } from "@/components/articles/ArticleShell";
+import { Figure } from "@/components/articles/Figure";
 import StiglerBarrierMarketSimulator from "@/components/visuals/StiglerBarrierMarketSimulator";
 
-<article className="mx-auto max-w-3xl px-6 py-16">
+<ArticleShell slug="market-structure">
 
-# Market Structure
+If you've ever worked a shitty retail job in high school prior to entering the workforce, you've probably noticed the dynamics at your boring office job are radically different than serving at a restaurant. Your business unit probably employs 40 to 100 people, most being college educated with a comfy six-figure salary, and generates $10M in profit annually. Meanwhile the restaurant staff is a frenetic hodgepodge of young adults, stoners, and a few stressed-out managers working non-stop at $12 to $20/hr to generate at most maybe $200k in profit on $1M of chef's specials and cocktail sales.
 
-If you've ever worked a shitty retail job in high school prior to entering the workforce, you've probably noticed the dynamics at your boring office job are radically different than serving at a restaurant. Your business unit probably employs 40–100 people, most being college educated with a comfy 6-figure salary, and generates $10M in profit annually. While the restaurant staff is a frenetic hodgepodge of young adults, stoners, and a few stressed-out managers working non-stop at $12–$20/hr to generate at most maybe $200k in profit on $1M of chef's specials and cocktail sales.
+Your office job is also mostly done on the computer. All you guys need is an office, maybe some servers, and Microsoft 365. The restaurant on the other hand requires machines costing tens of thousands of dollars, delicate management of the inflow and use of ingredients, and strict staffing requirements to run at full capacity.
 
-These are two fundamentally different businesses, so how could we possibly even compare them? The answer lies in a concept economists and investors refer to as **market structure**.
+These are two fundamentally different businesses, so how could we possibly even compare them? Well, the answer lies in a concept economists and investors refer to as **market structure**.
 
 Market structure describes the rulebook businesses play by: How much money do we need to launch a new company? How easy is it for rivals to copy our product? How easy is it to produce the product and get it to customers?
 
+Economists classify market structure into four categories: perfect competition, monopolistic competition, oligopoly, and monopoly. But in reality market structure exists on a spectrum, with perfect competition between many firms on one end and a singular monopolist on the other. Most real businesses lie somewhere on this spectrum, and understanding where they lie tells you something that no earnings report will.
+
 ## The 4 Factors
 
-A convenient way to conceptualize market structure is to think of markets as games, where the players are the businesses competing with each other. The rules for any given industry can largely be described by four factors: **barriers to entry**, **economies of scale**, **differentiation**, and **network effects**.
+A convenient way to conceptualize market structure is to think of markets or industries as games, where the players are the businesses competing with each other. Market structure can thus be thought of as the rulebook that determines how many players can play, and how they play the game. The rules for any given industry can largely be described by four factors: barriers to entry, economies of scale, differentiation, and network effects. The influence of these factors varies by industry: it's easier to open a single restaurant than to build a refinery, but you can scale up a refinery a lot easier than you can a single restaurant.
 
-## Barriers to Entry — How hard is it to start playing the game?
+## Barriers to Entry: How hard is it to start playing the game?
 
-This is a pretty simple concept: how hard is it to start a business in a given market? **Capital requirements** are the cleanest to model — opening a McDonald's might take $100,000 in startup costs, while building a factory could cost billions.
+This is a pretty simple concept: how hard is it to start a business in a given market? The answer depends on multiple factors:
 
-The simulator below lets you turn the dials on a market and watch how barriers to entry reshape who survives. Drag the sliders to change capital requirements and cost structure, then randomize the hidden market to see a fresh game play out.
+**Capital Requirements** *(How much capital do you need to start selling goods?)*
+
+For example, opening up a McDonald's only requires maybe $100,000 in startup costs. Building a factory might cost billions. So naturally it's a lot harder to enter the factory game than the McDonald's game.
+
+**Regulatory Hurdles** *(How strict are the regulatory barriers?)*
+
+The government and legal system is always a problem, but how big of a problem depends on what you want to produce. You probably won't need much in government approval to start a small business. But if you want to start producing pharmaceuticals, you'll be spending billions of dollars and years trying to navigate FDA requirements to even see if your product is profitable.
+
+**Incumbent Advantage** *(Can you start producing as efficiently as the existing businesses?)*
+
+The same reason you don't want to sit down at a poker table where one guy has all the chips is the same reason you probably don't want to start a competitor to Google Search or AWS: you're basically drawing dead no matter how good you play. Entrepreneurs are less likely to enter a market where existing firms have an overwhelming advantage.
+
+We'll focus on capital requirements as they are the cleanest to model and simulate.
+
+<Figure bleed label="Interactive" caption="Drag your firm's variable and fixed costs and watch who survives the shakeout. Competitors are hidden draws from the same market.">
 
 <StiglerBarrierMarketSimulator />
 
-## Economies of Scale — Does getting bigger make things cheaper?
+</Figure>
 
-Whether an industry exhibits economies of scale is a fairly simple question: does the average cost per good produced decrease as you produce more? If I'm BMW and my average cost is $10,000/car at 10,000 cars but $9,000/car at 11,000 cars, I benefit from economies of scale.
+## Economies of Scale: Does getting bigger make things cheaper?
 
-</article>
+Whether an industry exhibits economies of scale is a fairly simple question: does the average cost for goods produced decrease as you produce more goods? If I'm BMW and my average cost per BMW is $10,000/car when producing 10,000 cars but $9,000/car when producing 11,000 cars, I benefit from economies of scale: production gets cheaper the more I produce.
+
+## Differentiation: How easily can the competition copy you?
+
+The next question is whether your product is actually distinct, or just another interchangeable unit in a sea of substitutes. More on how differentiation reshapes the game is coming soon.
+
+## Network Effects: Is your product more valuable the more people use it?
+
+Some products get better for every user the moment another user joins. Why that flips the usual logic of competition is the subject of the next piece, coming soon.
+
+</ArticleShell>

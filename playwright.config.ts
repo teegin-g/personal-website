@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Port is env-overridable so the suite can run against a free port without
+// clashing with other local servers. Defaults to 3100 for backward compat.
 const PORT = Number(process.env.E2E_PORT) || 3100;
 const baseURL = `http://localhost:${PORT}`;
 
