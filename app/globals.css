@@ -28,7 +28,9 @@
   --glow: oklch(0.7 0.14 75);
   --muted: oklch(0.48 0.02 60);
   --grid-line: oklch(0.80 0.01 95);
-  --panel: oklch(0.97 0.008 95);
+  /* Recessed instrument well: a touch below --bg (0.95), above --surface (0.91),
+     so day-theme sim panels read as inset instruments, not flat near-white cards. */
+  --panel: oklch(0.93 0.01 95);
   --positive: oklch(0.50 0.10 165);
   --danger: oklch(0.52 0.18 25);
 }
