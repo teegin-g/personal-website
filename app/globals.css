@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme="phosphor"] {
+  --bg: oklch(0.16 0.012 250);
+  --surface: oklch(0.21 0.015 250);
+  --ink: oklch(0.97 0.005 250);
+  --body: oklch(0.78 0.02 230);
+  --accent: oklch(0.82 0.13 180);
+  --agent: oklch(0.8 0.11 230);
+  --glow: oklch(0.85 0.14 180);
+}
+
+[data-theme="ledger"] {
+  --bg: oklch(0.95 0.012 95);
+  --surface: oklch(0.91 0.014 95);
+  --ink: oklch(0.22 0.01 60);
+  --body: oklch(0.38 0.02 60);
+  --accent: oklch(0.46 0.07 200);
+  --agent: oklch(0.46 0.07 200);
+  --glow: oklch(0.7 0.14 75);
+}
+
+html {
+  background: var(--bg);
+  color: var(--body);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--body);
+  transition: background-color 0.6s ease, color 0.6s ease;
+}
+
+/* Soft scrim of the page background behind copy, so the field stays legible
+   where agents/links cross text. Not a card: a vignette that fades to nothing. */
+.copy-scrim {
+  position: relative;
+}
+.copy-scrim > * {
+  position: relative;
+  z-index: 1;
+}
+.copy-scrim::before {
+  content: "";
+  position: absolute;
+  inset: -10% -8%;
+  z-index: 0;
+  pointer-events: none;
+  /* Anchored slightly left of center but held opaque well past the copy's
+     right edge, so the full text column stays legible where a bright mesh
+     crest crosses it (not just the left ~40%). */
+  background: radial-gradient(
+    150% 105% at 35% 50%,
+    var(--bg) 0%,
+    color-mix(in oklab, var(--bg) 90%, transparent) 60%,
+    color-mix(in oklab, var(--bg) 55%, transparent) 80%,
+    transparent 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  body {
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

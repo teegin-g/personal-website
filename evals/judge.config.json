@@ -1,0 +1,18 @@
+{
+  "schema": "project-setup/eval-judge-config",
+  "version": 1,
+  "engine": "claude",
+  "mode": "headless",
+  "require_fresh_context": true,
+  "read_only": true,
+  "output": "evals/runs/latest/verdict.json",
+  "retry_budget": 2,
+  "risk": {
+    "max_changed_files": 10,
+    "risky_globs": [
+      "**/*.css", "**/routes/**", "**/state/**", "**/filters/**",
+      "**/forms/**", "**/map/**", "**/auth/**", "**/*.snap",
+      "**/fixtures/**", "tests/**"
+    ]
+  }
+}

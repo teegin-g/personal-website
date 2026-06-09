@@ -1,0 +1,23 @@
+{
+  "schema": "project-setup/eval-checks",
+  "version": 1,
+  "gates": [
+    {
+      "name": "typecheck",
+      "command": "npx tsc --noEmit"
+    },
+    {
+      "name": "build",
+      "command": "npm run build"
+    },
+    {
+      "name": "unit",
+      "command": "npx vitest run"
+    },
+    {
+      "name": "e2e",
+      "command": "npx playwright test",
+      "optional": true
+    }
+  ]
+}

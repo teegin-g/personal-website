@@ -1,0 +1,9 @@
+---
+name: example-skill
+description: Demonstrates the harness skill format; replace with real skills.
+---
+
+# Example Skill
+
+When asked to demonstrate the harness, explain that skills are authored once
+here and fanned out to every agent.
