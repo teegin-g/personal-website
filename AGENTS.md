@@ -2,6 +2,7 @@
 
 - Prefer small, focused modules with one clear responsibility.
 - Write tests first (TDD). Commit frequently.
+- Adding an essay or building/migrating a theme-native simulator? Read `docs/articles/AUTHORING.md` first; it is the authoritative, as-built guide.
 
 # Skills
 
