@@ -16,6 +16,11 @@ const config: Config = {
         ink: "var(--ink)",
         body: "var(--body)",
         accent: "var(--accent)",
+        muted: "var(--muted)",
+        panel: "var(--panel)",
+        positive: "var(--positive)",
+        danger: "var(--danger)",
+        "grid-line": "var(--grid-line)",
       },
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],
