@@ -33,9 +33,6 @@ export default function Home() {
         {/* Beat 1 — arrival / who */}
         <section className="flex min-h-screen flex-col justify-center px-[8vw]">
           <div className="copy-scrim max-w-3xl">
-            <p className="mb-5 font-mono text-xs uppercase tracking-[0.22em] text-accent">
-              Exploration · Systems · Motion
-            </p>
             <h1 className="text-balance font-display text-[clamp(2.5rem,8vw,6rem)] font-extrabold leading-[0.92] tracking-[-0.035em] text-ink">
               Teegin Groves
             </h1>
@@ -48,7 +45,6 @@ export default function Home() {
 
         {/* Beat 2 — equilibrium / what */}
         <Beat
-          eyebrow="What I do"
           heading="Markets find their level. I make that visible."
           readout="price → equilibrium · drag to shock"
         >
@@ -58,7 +54,6 @@ export default function Home() {
 
         {/* Beat 3 — network / emergence */}
         <Beat
-          eyebrow="How it connects"
           heading="Order isn't imposed. It emerges."
           align="end"
         >

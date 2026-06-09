@@ -104,12 +104,17 @@ interface Props {
 
 export function EquilibriumSurface({ progressRef }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Sibling 2D canvas for the graceful fallback. A WebGL-bound canvas can never
+  // hand back a 2D context, so the static fallback MUST draw into its own
+  // element; we swap visibility between the two.
+  const fallbackRef = useRef<HTMLCanvasElement>(null);
   const { theme } = useTheme();
   const themeRef = useRef<Theme>(theme);
   themeRef.current = theme;
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    const fallbackCanvas = fallbackRef.current;
     if (!canvas) return;
 
     const reduce = window.matchMedia(
@@ -128,15 +133,23 @@ export function EquilibriumSurface({ progressRef }: Props) {
     // import. Never leaves a blank canvas.
     // ------------------------------------------------------------------
     const drawFallback = () => {
-      const ctx = canvas.getContext("2d");
+      // Draw into the SIBLING 2D canvas (the GL canvas can't yield a 2D
+      // context once bound). Then reveal it and hide the GL canvas so a lost
+      // or unavailable context never leaves a frozen/blank hero.
+      const target = fallbackCanvas ?? canvas;
+      const ctx = target.getContext("2d");
       if (!ctx) return;
+      if (target !== canvas) {
+        target.style.display = "block";
+        canvas.style.display = "none";
+      }
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = window.innerWidth;
       const h = window.innerHeight;
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
+      target.width = Math.floor(w * dpr);
+      target.height = Math.floor(h * dpr);
+      target.style.width = `${w}px`;
+      target.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const pal = THEME_COLORS[themeRef.current];
       const rgb = (c: Vec3, a: number) =>
@@ -208,11 +221,20 @@ export function EquilibriumSurface({ progressRef }: Props) {
   }, [progressRef]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 h-screen w-screen"
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 h-screen w-screen"
+      />
+      {/* Static-fallback surface, hidden until WebGL is unavailable or lost. */}
+      <canvas
+        ref={fallbackRef}
+        aria-hidden="true"
+        style={{ display: "none" }}
+        className="pointer-events-none fixed inset-0 z-0 h-screen w-screen"
+      />
+    </>
   );
 }
 

@@ -91,7 +91,7 @@ export function Close() {
         viewport={{ once: false, amount: 0.2 }}
         transition={{ duration: 0.8, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
         aria-label="Where to go next"
-        className="mt-14 flex flex-col"
+        className="copy-scrim mt-14 flex flex-col"
       >
         {destinations.map((d) =>
           d.comingSoon ? (

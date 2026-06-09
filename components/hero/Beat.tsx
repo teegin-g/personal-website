@@ -4,7 +4,9 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 interface Props {
-  eyebrow: string;
+  /** Optional kicker. Kept rare on purpose: mono is an instrument readout,
+      not a per-section eyebrow. */
+  eyebrow?: string;
   heading: string;
   children: ReactNode;
   /** Optional mono data readout shown under the copy. */
@@ -36,9 +38,11 @@ export function Beat({
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="copy-scrim max-w-2xl"
       >
-        <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-accent">
-          {eyebrow}
-        </p>
+        {eyebrow && (
+          <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-accent">
+            {eyebrow}
+          </p>
+        )}
         <h2 className="text-balance font-display text-[clamp(2rem,5.5vw,3.75rem)] font-extrabold leading-[0.98] tracking-[-0.03em] text-ink">
           {heading}
         </h2>
