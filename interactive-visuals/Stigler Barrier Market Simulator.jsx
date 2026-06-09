@@ -1,18 +1,20 @@
 import React, { useMemo, useState } from "react";
 import * as d3 from "d3";
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { SimFrame } from "@/components/sim/SimFrame";
+import { SimSlider } from "@/components/sim/SimSlider";
+import { SimReadout, SimReadoutRow } from "@/components/sim/SimReadout";
 import {
-  SlidersHorizontal,
-  RotateCcw,
-  TrendingUp,
-  Skull,
-  BarChart3,
-  Activity,
-  Bug,
-  Database,
-} from "lucide-react";
+  SimButton,
+  SimSelect,
+  SimTabs,
+  SimToggleButton,
+} from "@/components/sim/SimControls";
+import { CHART, CHART_COLOR, tint } from "@/components/sim/chart";
+import { formatPct, formatMoney, formatCompact, deltaTone } from "@/lib/sim/format";
+
+const TAIL_ALPHA = 0.4;
+const deltaClass = (v) => (deltaTone(v) === "positive" ? "text-positive" : "text-danger");
 
 const DEFAULTS = {
   userC: 7.6,
@@ -79,20 +81,6 @@ function normalRandom(random, mean, sd) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
-}
-
-function formatPct(value, digits = 1) {
-  if (!Number.isFinite(value)) return "--";
-  return `${(value * 100).toFixed(digits)}%`;
-}
-
-function formatMoney(value, digits = 2) {
-  if (!Number.isFinite(value)) return "--";
-  return `$${value.toFixed(digits)}`;
-}
-
-function formatCompact(value) {
-  return d3.format("~s")(value).replace("G", "B");
 }
 
 function averageCost(firm, q, d) {
@@ -229,7 +217,7 @@ function Tooltip({ x, y, children, className = "" }) {
 
   return (
     <div
-      className={`pointer-events-none absolute z-30 min-w-[150px] rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 text-xs text-slate-700 shadow-xl backdrop-blur ${className}`}
+      className={`pointer-events-none absolute z-30 min-w-[150px] ${CHART.tooltipSurface} backdrop-blur ${className}`}
       style={{ left, top }}
     >
       {children}
@@ -237,51 +225,10 @@ function Tooltip({ x, y, children, className = "" }) {
   );
 }
 
-function Slider({ label, value, min, max, step, onChange, suffix = "", prefix = "", hint, comparisonLabel, comparisonValue }) {
-  const displayValue = `${prefix}${Number(value).toLocaleString(undefined, { maximumFractionDigits: step < 1 ? 2 : 0 })}${suffix}`;
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium text-slate-800">{label}</div>
-          {hint && <div className="text-xs text-slate-500">{hint}</div>}
-        </div>
-
-        {comparisonLabel ? (
-          <div className="grid min-w-[150px] grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white text-center shadow-sm">
-            <div className="border-r border-slate-200 px-2 py-1.5">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">User</div>
-              <div className="text-sm font-semibold tabular-nums text-slate-900">{displayValue}</div>
-            </div>
-            <div className="px-2 py-1.5">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Market Avg.</div>
-              <div className="text-sm font-semibold tabular-nums text-slate-700">{comparisonValue}</div>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold tabular-nums text-slate-800">
-            {displayValue}
-          </div>
-        )}
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-slate-900"
-      />
-    </div>
-  );
-}
-
 function NumberCell({ value, onChange, min, max, step = 1, prefix = "" }) {
   return (
-    <div className="flex items-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-slate-400">
-      {prefix && <span className="border-r border-slate-100 px-2 text-xs font-semibold text-slate-400">{prefix}</span>}
+    <div className="flex items-center overflow-hidden rounded-xl border border-grid-line bg-surface focus-within:border-accent">
+      {prefix && <span className="border-r border-grid-line px-2 text-xs font-semibold text-muted">{prefix}</span>}
       <input
         type="number"
         value={value}
@@ -289,39 +236,26 @@ function NumberCell({ value, onChange, min, max, step = 1, prefix = "" }) {
         max={max}
         step={step}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full bg-transparent px-2 py-2 text-right text-xs font-semibold tabular-nums text-slate-800 outline-none"
+        className="w-full bg-transparent px-2 py-2 text-right text-xs font-semibold tabular-nums text-ink outline-none"
       />
     </div>
   );
 }
 
-function DebugTabButton({ active, children, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
-        active ? "bg-slate-950 text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 function DistributionSettingsTable({ cHat, sigmaC, fHat, sigmaF, setCHat, setSigmaC, setFHat, setSigmaF }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-grid-line bg-surface">
       <table className="w-full text-xs">
-        <thead className="bg-slate-50 text-slate-500">
+        <thead className="bg-panel text-muted">
           <tr>
             <th className="px-3 py-2 text-left font-semibold">Parameter</th>
             <th className="px-3 py-2 text-right font-semibold">Mean</th>
             <th className="px-3 py-2 text-right font-semibold">Std.</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-grid-line">
           <tr>
-            <td className="px-3 py-3 font-semibold text-slate-800">c</td>
+            <td className="px-3 py-3 font-semibold text-ink">c</td>
             <td className="px-2 py-2">
               <NumberCell value={cHat} min={0.5} max={30} step={0.05} prefix="$" onChange={setCHat} />
             </td>
@@ -330,7 +264,7 @@ function DistributionSettingsTable({ cHat, sigmaC, fHat, sigmaF, setCHat, setSig
             </td>
           </tr>
           <tr>
-            <td className="px-3 py-3 font-semibold text-slate-800">F</td>
+            <td className="px-3 py-3 font-semibold text-ink">F</td>
             <td className="px-2 py-2">
               <NumberCell value={fHat} min={50} max={10000} step={25} prefix="$" onChange={setFHat} />
             </td>
@@ -341,21 +275,6 @@ function DistributionSettingsTable({ cHat, sigmaC, fHat, sigmaF, setCHat, setSig
         </tbody>
       </table>
     </div>
-  );
-}
-
-function MetricCard({ icon: Icon, label, value, sublabel }) {
-  return (
-    <Card className="rounded-2xl border-slate-200 bg-white/85 shadow-sm backdrop-blur">
-      <CardContent className="p-4">
-        <div className="mb-3 flex items-center gap-2 text-slate-500">
-          <Icon className="h-4 w-4" />
-          <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
-        </div>
-        <div className="text-2xl font-semibold tracking-tight text-slate-950">{value}</div>
-        <div className="mt-1 text-xs text-slate-500">{sublabel}</div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -372,19 +291,19 @@ function ShareBars({ rows }) {
     <div className="relative space-y-3">
       {hover && (
         <Tooltip x={hover.x} y={hover.y}>
-          <div className="font-semibold text-slate-950">{hover.row.label}</div>
+          <div className="font-semibold text-ink">{hover.row.label}</div>
           <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1">
-            <span className="text-slate-500">Share</span><span className="text-right font-semibold">{formatPct(hover.row.share, 2)}</span>
-            {hover.row.margin != null && <><span className="text-slate-500">Margin</span><span className="text-right font-semibold">{formatPct(hover.row.margin, 1)}</span></>}
-            {hover.row.acMin != null && <><span className="text-slate-500">AC min</span><span className="text-right font-semibold">{formatMoney(hover.row.acMin, 2)}</span></>}
-            {hover.row.profit != null && <><span className="text-slate-500">Profit</span><span className="text-right font-semibold">{formatMoney(hover.row.profit, 0)}</span></>}
+            <span className="text-muted">Share</span><span className="text-right font-semibold">{formatPct(hover.row.share, 2)}</span>
+            {hover.row.margin != null && <><span className="text-muted">Margin</span><span className="text-right font-semibold">{formatPct(hover.row.margin, 1)}</span></>}
+            {hover.row.acMin != null && <><span className="text-muted">AC min</span><span className="text-right font-semibold">{formatMoney(hover.row.acMin, 2)}</span></>}
+            {hover.row.profit != null && <><span className="text-muted">Profit</span><span className="text-right font-semibold">{formatMoney(hover.row.profit, 0)}</span></>}
           </div>
         </Tooltip>
       )}
       {display.map((r) => (
         <div
           key={r.id}
-          className="space-y-1 rounded-xl px-1 py-0.5 transition hover:bg-slate-50"
+          className="space-y-1 rounded-xl px-1 py-0.5 transition hover:bg-surface"
           onMouseMove={(e) => {
             const rect = e.currentTarget.parentElement.getBoundingClientRect();
             setHover({ row: r, x: e.clientX - rect.left, y: e.clientY - rect.top });
@@ -392,16 +311,23 @@ function ShareBars({ rows }) {
           onMouseLeave={() => setHover(null)}
         >
           <div className="flex items-center justify-between text-xs">
-            <span className={r.isUser ? "font-semibold text-slate-950" : "text-slate-600"}>{r.label}</span>
-            <span className="font-medium tabular-nums text-slate-700">{formatPct(r.share, 1)}</span>
+            <span className={r.isUser ? "font-semibold text-ink" : "text-body"}>{r.label}</span>
+            <span className="font-medium tabular-nums text-body">{formatPct(r.share, 1)}</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-2 overflow-hidden rounded-full bg-surface">
             <motion.div
               layout
               initial={false}
               animate={{ width: `${clamp(r.share * 100, 0, 100)}%` }}
               transition={{ type: "spring", stiffness: 190, damping: 24 }}
-              className={r.isUser ? "h-full rounded-full bg-slate-950" : r.isTail ? "h-full rounded-full bg-slate-300" : "h-full rounded-full bg-slate-500"}
+              className="h-full rounded-full"
+              style={{
+                background: r.isUser
+                  ? CHART_COLOR.accent
+                  : r.isTail
+                    ? tint(CHART_COLOR.muted, TAIL_ALPHA)
+                    : tint(CHART_COLOR.muted, 0.75),
+              }}
             />
           </div>
         </div>
@@ -411,7 +337,7 @@ function ShareBars({ rows }) {
 }
 
 function AxisLabel({ children, className = "" }) {
-  return <div className={`text-[11px] font-medium text-slate-500 ${className}`}>{children}</div>;
+  return <div className={`text-[11px] font-medium text-muted ${className}`}>{children}</div>;
 }
 
 function HtmlScatterPlot({ rows }) {
@@ -425,33 +351,33 @@ function HtmlScatterPlot({ rows }) {
   const yTicks = yScale.ticks(5);
 
   return (
-    <div className="relative h-full min-h-[420px] rounded-2xl bg-white p-4">
+    <div className="relative h-full min-h-[420px] rounded-2xl bg-panel p-4">
       <div className="absolute inset-x-16 bottom-8 top-4">
         {hover && (
           <Tooltip x={hover.x} y={hover.y}>
-            <div className="font-semibold text-slate-950">{hover.row.label}</div>
+            <div className="font-semibold text-ink">{hover.row.label}</div>
             <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1">
-              <span className="text-slate-500">MES</span><span className="text-right font-semibold">{formatCompact(hover.row.mes)}</span>
-              <span className="text-slate-500">AC min</span><span className="text-right font-semibold">{formatMoney(hover.row.acMin, 2)}</span>
-              <span className="text-slate-500">Share</span><span className="text-right font-semibold">{formatPct(hover.row.share, 2)}</span>
-              <span className="text-slate-500">c</span><span className="text-right font-semibold">{formatMoney(hover.row.c, 2)}</span>
-              <span className="text-slate-500">F</span><span className="text-right font-semibold">{formatMoney(hover.row.F, 0)}</span>
+              <span className="text-muted">MES</span><span className="text-right font-semibold">{formatCompact(hover.row.mes)}</span>
+              <span className="text-muted">AC min</span><span className="text-right font-semibold">{formatMoney(hover.row.acMin, 2)}</span>
+              <span className="text-muted">Share</span><span className="text-right font-semibold">{formatPct(hover.row.share, 2)}</span>
+              <span className="text-muted">c</span><span className="text-right font-semibold">{formatMoney(hover.row.c, 2)}</span>
+              <span className="text-muted">F</span><span className="text-right font-semibold">{formatMoney(hover.row.F, 0)}</span>
             </div>
           </Tooltip>
         )}
 
         {xTicks.map((tick) => (
-          <div key={`x-${tick}`} className="absolute top-0 h-full border-l border-dashed border-slate-200" style={{ left: `${xScale(tick)}%` }}>
-            <div className="absolute top-full mt-2 -translate-x-1/2 whitespace-nowrap text-[11px] text-slate-500">{formatCompact(tick)}</div>
+          <div key={`x-${tick}`} className={`absolute top-0 h-full border-l ${CHART.gridLine}`} style={{ left: `${xScale(tick)}%` }}>
+            <div className={`absolute top-full mt-2 -translate-x-1/2 whitespace-nowrap ${CHART.axisText}`}>{formatCompact(tick)}</div>
           </div>
         ))}
         {yTicks.map((tick) => (
-          <div key={`y-${tick}`} className="absolute left-0 w-full border-t border-dashed border-slate-200" style={{ top: `${yScale(tick)}%` }}>
-            <div className="absolute right-full mr-2 -translate-y-1/2 whitespace-nowrap text-[11px] text-slate-500">${tick.toFixed(1)}</div>
+          <div key={`y-${tick}`} className={`absolute left-0 w-full border-t ${CHART.gridLine}`} style={{ top: `${yScale(tick)}%` }}>
+            <div className={`absolute right-full mr-2 -translate-y-1/2 whitespace-nowrap ${CHART.axisText}`}>${tick.toFixed(1)}</div>
           </div>
         ))}
 
-        <div className="absolute inset-0 border-b border-l border-slate-400" />
+        <div className={`absolute inset-0 border-b border-l ${CHART.axisLine}`} />
 
         {[...rows]
           .filter((r) => !r.isUser)
@@ -461,13 +387,15 @@ function HtmlScatterPlot({ rows }) {
             return (
               <button
                 key={row.id}
-                className="absolute rounded-full border border-slate-500 bg-slate-400/55 transition hover:z-20 hover:scale-125 hover:bg-slate-500/80 focus:outline-none"
+                className="absolute rounded-full transition hover:z-20 hover:scale-125 focus:outline-none"
                 style={{
                   left: `${xScale(row.mes)}%`,
                   top: `${yScale(row.acMin)}%`,
                   width: size,
                   height: size,
                   transform: "translate(-50%, -50%)",
+                  border: `1px solid ${CHART_COLOR.gridLine}`,
+                  background: CHART_COLOR.rivalFill,
                 }}
                 onMouseMove={(e) => {
                   const rect = e.currentTarget.parentElement.getBoundingClientRect();
@@ -486,13 +414,15 @@ function HtmlScatterPlot({ rows }) {
             return (
               <button
                 key={row.id}
-                className="absolute z-10 rounded-full border-[3px] border-white bg-slate-950 shadow-lg transition hover:scale-125 focus:outline-none"
+                className="absolute z-10 rounded-full shadow-lg transition hover:scale-125 focus:outline-none"
                 style={{
                   left: `${xScale(row.mes)}%`,
                   top: `${yScale(row.acMin)}%`,
                   width: size,
                   height: size,
                   transform: "translate(-50%, -50%)",
+                  border: `3px solid ${CHART_COLOR.gridLine}`,
+                  background: CHART_COLOR.accent,
                 }}
                 onMouseMove={(e) => {
                   const rect = e.currentTarget.parentElement.getBoundingClientRect();
@@ -501,7 +431,7 @@ function HtmlScatterPlot({ rows }) {
                 onMouseLeave={() => setHover(null)}
                 aria-label="Your firm"
               >
-                <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold text-slate-950">You</span>
+                <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold text-ink">You</span>
               </button>
             );
           })}
@@ -605,11 +535,11 @@ function HtmlLineChart({
   const xTicks = xScale.ticks(6);
   const yTicks = yScale.ticks(5);
 
-  const getColorClass = (s, index) => {
-    if (s.isUser) return "bg-slate-950";
-    if (s.id === "top-rival") return "bg-slate-500";
-    if (s.id === "tail") return "bg-slate-300";
-    return index % 2 === 0 ? "bg-slate-500" : "bg-slate-400";
+  const getColor = (s, index) => {
+    if (s.isUser) return CHART_COLOR.accent;
+    if (s.id === "top-rival") return tint(CHART_COLOR.muted, 0.85);
+    if (s.id === "tail") return tint(CHART_COLOR.muted, TAIL_ALPHA);
+    return index % 2 === 0 ? tint(CHART_COLOR.muted, 0.8) : tint(CHART_COLOR.muted, 0.6);
   };
 
   const getOpacity = (s) => {
@@ -665,7 +595,7 @@ function HtmlLineChart({
   });
 
   return (
-    <div className={`relative ${heightClass} min-h-[420px] rounded-2xl bg-white p-4`}>
+    <div className={`relative ${heightClass} min-h-[420px] rounded-2xl bg-panel p-4`}>
       <div
         className="absolute inset-x-16 bottom-8 top-4"
         onMouseMove={setPeriodHover}
@@ -674,21 +604,37 @@ function HtmlLineChart({
         {hover && hover.tableMode && (
           <Tooltip x={hover.x} y={hover.y} className="w-[340px]">
             <div className="mb-2 flex items-center justify-between gap-3">
-              <div className="font-semibold text-slate-950">Period {hover.t}</div>
-              <div className="text-[11px] text-slate-500">rendered firms • low to high</div>
+              <div className="font-semibold text-ink">Period {hover.t}</div>
+              <div className="text-[11px] text-muted">rendered firms • low to high</div>
             </div>
-            <div className="max-h-[340px] overflow-y-auto rounded-xl border border-slate-100">
+            <div className="max-h-[340px] overflow-y-auto rounded-xl border border-grid-line">
               <table className="w-full text-left text-[11px]">
-                <thead className="bg-slate-50 text-slate-500">
+                <thead className="bg-surface text-muted">
                   <tr>
                     <th className="px-2 py-1 font-semibold">Firm</th>
                     <th className="px-2 py-1 text-right font-semibold">Share</th>
                     <th className="px-2 py-1 text-right font-semibold">Margin</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-grid-line">
                   {hover.rows.map((row) => (
-                    <tr key={row.id} className={row.isUser ? "bg-slate-950 text-white" : row.alive === false ? "bg-slate-50 text-slate-400" : "bg-white text-slate-700"}>
+                    <tr
+                      key={row.id}
+                      className={
+                        row.isUser
+                          ? "text-bg"
+                          : row.alive === false
+                            ? "text-muted"
+                            : "text-body"
+                      }
+                      style={
+                        row.isUser
+                          ? { background: CHART_COLOR.accent }
+                          : row.alive === false
+                            ? { background: tint(CHART_COLOR.muted, 0.12) }
+                            : undefined
+                      }
+                    >
                       <td className="max-w-[130px] truncate px-2 py-1 font-medium">{row.label}</td>
                       <td className="px-2 py-1 text-right tabular-nums">{formatPct(row.share, 2)}</td>
                       <td className="px-2 py-1 text-right tabular-nums">{row.margin == null ? "--" : formatPct(row.margin, 1)}</td>
@@ -702,34 +648,34 @@ function HtmlLineChart({
 
         {hover && !hover.tableMode && (
           <Tooltip x={hover.x} y={hover.y}>
-            <div className="font-semibold text-slate-950">{hover.label}</div>
+            <div className="font-semibold text-ink">{hover.label}</div>
             <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1">
-              <span className="text-slate-500">Period</span><span className="text-right font-semibold">{hover.t}</span>
-              <span className="text-slate-500">{metricLabel}</span><span className="text-right font-semibold">{hover.value}</span>
-              {hover.meta?.share != null && <><span className="text-slate-500">Share</span><span className="text-right font-semibold">{formatPct(hover.meta.share, 2)}</span></>}
-              {hover.meta?.margin != null && <><span className="text-slate-500">Margin</span><span className="text-right font-semibold">{formatPct(hover.meta.margin, 1)}</span></>}
-              {hover.meta?.profit != null && <><span className="text-slate-500">Profit</span><span className="text-right font-semibold">{formatMoney(hover.meta.profit, 0)}</span></>}
-              {hover.meta?.alive != null && <><span className="text-slate-500">Status</span><span className="text-right font-semibold">{hover.meta.alive ? "Alive" : "Exited"}</span></>}
+              <span className="text-muted">Period</span><span className="text-right font-semibold">{hover.t}</span>
+              <span className="text-muted">{metricLabel}</span><span className="text-right font-semibold">{hover.value}</span>
+              {hover.meta?.share != null && <><span className="text-muted">Share</span><span className="text-right font-semibold">{formatPct(hover.meta.share, 2)}</span></>}
+              {hover.meta?.margin != null && <><span className="text-muted">Margin</span><span className="text-right font-semibold">{formatPct(hover.meta.margin, 1)}</span></>}
+              {hover.meta?.profit != null && <><span className="text-muted">Profit</span><span className="text-right font-semibold">{formatMoney(hover.meta.profit, 0)}</span></>}
+              {hover.meta?.alive != null && <><span className="text-muted">Status</span><span className="text-right font-semibold">{hover.meta.alive ? "Alive" : "Exited"}</span></>}
             </div>
           </Tooltip>
         )}
 
         {xTicks.map((tick) => (
-          <div key={`x-${tick}`} className="absolute top-0 h-full border-l border-dashed border-slate-200" style={{ left: `${xScale(tick)}%` }}>
-            <div className="absolute top-full mt-2 -translate-x-1/2 whitespace-nowrap text-[11px] text-slate-500">{tick}</div>
+          <div key={`x-${tick}`} className={`absolute top-0 h-full border-l ${CHART.gridLine}`} style={{ left: `${xScale(tick)}%` }}>
+            <div className={`absolute top-full mt-2 -translate-x-1/2 whitespace-nowrap ${CHART.axisText}`}>{tick}</div>
           </div>
         ))}
         {yTicks.map((tick) => (
-          <div key={`y-${tick}`} className="absolute left-0 w-full border-t border-dashed border-slate-200" style={{ top: `${yScale(tick)}%` }}>
-            <div className="absolute right-full mr-2 -translate-y-1/2 whitespace-nowrap text-[11px] text-slate-500">{valueFormat(tick)}</div>
+          <div key={`y-${tick}`} className={`absolute left-0 w-full border-t ${CHART.gridLine}`} style={{ top: `${yScale(tick)}%` }}>
+            <div className={`absolute right-full mr-2 -translate-y-1/2 whitespace-nowrap ${CHART.axisText}`}>{valueFormat(tick)}</div>
           </div>
         ))}
-        <div className="absolute inset-0 border-b border-l border-slate-400" />
+        <div className={`absolute inset-0 border-b border-l ${CHART.axisLine}`} />
 
         {segments.map((seg) => (
           <div
             key={`${seg.s.id}-${seg.i}`}
-            className={`absolute origin-left rounded-full ${getColorClass(seg.s, seg.seriesIndex)}`}
+            className="absolute origin-left rounded-full"
             style={{
               left: `${seg.x1}%`,
               top: `${seg.y1}%`,
@@ -737,6 +683,7 @@ function HtmlLineChart({
               height: `${seg.s.width ?? 2}px`,
               opacity: getOpacity(seg.s),
               transform: `rotate(${seg.angle}deg)`,
+              background: getColor(seg.s, seg.seriesIndex),
             }}
           />
         ))}
@@ -746,7 +693,7 @@ function HtmlLineChart({
           return points.map((p) => (
             <button
               key={`${s.id}-${p.t}`}
-              className={`absolute rounded-full border border-white shadow-sm transition hover:z-20 hover:scale-150 focus:outline-none ${getColorClass(s, seriesIndex)}`}
+              className="absolute rounded-full shadow-sm transition hover:z-20 hover:scale-150 focus:outline-none"
               style={{
                 left: `${xScale(p.t)}%`,
                 top: `${yScale(p.value)}%`,
@@ -754,6 +701,8 @@ function HtmlLineChart({
                 height: s.isUser ? 9 : 7,
                 transform: "translate(-50%, -50%)",
                 opacity: s.isUser ? 1 : showMany ? 0.55 : 0.8,
+                background: getColor(s, seriesIndex),
+                border: `1px solid ${CHART_COLOR.gridLine}`,
               }}
               onMouseMove={(e) => {
                 if (periodTableTooltip) return;
@@ -780,28 +729,22 @@ function HtmlLineChart({
 
 function VisualCard({ slotName, selected, onSelect, children }) {
   return (
-    <Card className="min-h-[640px] rounded-3xl border-slate-200 bg-white/90 shadow-sm backdrop-blur">
-      <CardContent className="flex h-full flex-col p-5">
-        <div className="mb-3 flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{slotName}</div>
-            <h2 className="text-xl font-semibold">{VISUALS.find((v) => v.key === selected)?.label}</h2>
-          </div>
-          <select
-            value={selected}
-            onChange={(e) => onSelect(e.target.value)}
-            className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm outline-none focus:border-slate-400"
-          >
-            {VISUALS.map((v) => (
-              <option key={v.key} value={v.key}>
-                {v.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex-1">{children}</div>
-      </CardContent>
-    </Card>
+    <SimFrame
+      className="flex min-h-[640px] flex-col rounded-3xl"
+      eyebrow={slotName}
+      title={VISUALS.find((v) => v.key === selected)?.label}
+      toolbar={
+        <SimSelect value={selected} onChange={(e) => onSelect(e.target.value)}>
+          {VISUALS.map((v) => (
+            <option key={v.key} value={v.key}>
+              {v.label}
+            </option>
+          ))}
+        </SimSelect>
+      }
+    >
+      <div className="flex-1">{children}</div>
+    </SimFrame>
   );
 }
 
@@ -810,56 +753,56 @@ function FirmParameterTable({ rows, finalRows }) {
   const displayRows = [...rows].sort((a, b) => (a.isUser ? -1 : b.isUser ? 1 : a.id.localeCompare(b.id)));
 
   return (
-    <Card className="rounded-3xl border-slate-200 bg-white/90 shadow-sm backdrop-blur">
-      <CardContent className="p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">Debug firm table</h2>
-            <p className="text-sm text-slate-500">Generated parameters and simulated outcomes for every firm.</p>
-          </div>
-          <Database className="h-5 w-5 text-slate-400" />
-        </div>
-        <div className="max-h-[420px] overflow-auto rounded-2xl border border-slate-200">
-          <table className="w-full min-w-[980px] text-left text-xs">
-            <thead className="sticky top-0 bg-slate-50 text-slate-500">
-              <tr>
-                <th className="px-3 py-2 font-semibold">Firm</th>
-                <th className="px-3 py-2 font-semibold">Type</th>
-                <th className="px-3 py-2 font-semibold">c</th>
-                <th className="px-3 py-2 font-semibold">F</th>
-                <th className="px-3 py-2 font-semibold">MES</th>
-                <th className="px-3 py-2 font-semibold">AC min</th>
-                <th className="px-3 py-2 font-semibold">Static share</th>
-                <th className="px-3 py-2 font-semibold">Static margin</th>
-                <th className="px-3 py-2 font-semibold">Final share</th>
-                <th className="px-3 py-2 font-semibold">Final margin</th>
-                <th className="px-3 py-2 font-semibold">Final status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {displayRows.map((row) => {
-                const final = finalById.get(row.id);
-                return (
-                  <tr key={row.id} className={row.isUser ? "bg-slate-950 text-white" : "bg-white text-slate-700"}>
-                    <td className="px-3 py-2 font-semibold">{row.label}</td>
-                    <td className="px-3 py-2">{row.isUser ? "User" : "Competitor"}</td>
-                    <td className="px-3 py-2 tabular-nums">{row.c.toFixed(2)}</td>
-                    <td className="px-3 py-2 tabular-nums">{row.F.toFixed(0)}</td>
-                    <td className="px-3 py-2 tabular-nums">{formatCompact(row.mes)}</td>
-                    <td className="px-3 py-2 tabular-nums">{formatMoney(row.acMin, 2)}</td>
-                    <td className="px-3 py-2 tabular-nums">{formatPct(row.share, 2)}</td>
-                    <td className="px-3 py-2 tabular-nums">{formatPct(row.margin, 1)}</td>
-                    <td className="px-3 py-2 tabular-nums">{formatPct(final?.share ?? 0, 2)}</td>
-                    <td className="px-3 py-2 tabular-nums">{final?.margin == null ? "--" : formatPct(final.margin, 1)}</td>
-                    <td className="px-3 py-2">{final?.alive ? "Alive" : "Exited"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+    <SimFrame
+      className="rounded-3xl"
+      eyebrow="Debug"
+      title="Debug firm table"
+    >
+      <p className="-mt-3 mb-4 text-sm text-body">Generated parameters and simulated outcomes for every firm.</p>
+      <div className="max-h-[420px] overflow-auto rounded-2xl border border-grid-line">
+        <table className="w-full min-w-[980px] text-left text-xs">
+          <thead className="sticky top-0 bg-surface text-muted">
+            <tr>
+              <th className="px-3 py-2 font-semibold">Firm</th>
+              <th className="px-3 py-2 font-semibold">Type</th>
+              <th className="px-3 py-2 font-semibold">c</th>
+              <th className="px-3 py-2 font-semibold">F</th>
+              <th className="px-3 py-2 font-semibold">MES</th>
+              <th className="px-3 py-2 font-semibold">AC min</th>
+              <th className="px-3 py-2 font-semibold">Static share</th>
+              <th className="px-3 py-2 font-semibold">Static margin</th>
+              <th className="px-3 py-2 font-semibold">Final share</th>
+              <th className="px-3 py-2 font-semibold">Final margin</th>
+              <th className="px-3 py-2 font-semibold">Final status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-grid-line">
+            {displayRows.map((row) => {
+              const final = finalById.get(row.id);
+              return (
+                <tr
+                  key={row.id}
+                  className={row.isUser ? "text-bg" : "text-body"}
+                  style={row.isUser ? { background: CHART_COLOR.accent } : undefined}
+                >
+                  <td className="px-3 py-2 font-semibold">{row.label}</td>
+                  <td className="px-3 py-2">{row.isUser ? "User" : "Competitor"}</td>
+                  <td className="px-3 py-2 tabular-nums">{row.c.toFixed(2)}</td>
+                  <td className="px-3 py-2 tabular-nums">{row.F.toFixed(0)}</td>
+                  <td className="px-3 py-2 tabular-nums">{formatCompact(row.mes)}</td>
+                  <td className="px-3 py-2 tabular-nums">{formatMoney(row.acMin, 2)}</td>
+                  <td className="px-3 py-2 tabular-nums">{formatPct(row.share, 2)}</td>
+                  <td className="px-3 py-2 tabular-nums">{formatPct(row.margin, 1)}</td>
+                  <td className="px-3 py-2 tabular-nums">{formatPct(final?.share ?? 0, 2)}</td>
+                  <td className="px-3 py-2 tabular-nums">{final?.margin == null ? "--" : formatPct(final.margin, 1)}</td>
+                  <td className="px-3 py-2">{final?.alive ? "Alive" : "Exited"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </SimFrame>
   );
 }
 
@@ -995,14 +938,14 @@ export default function StiglerBarrierMarketSimulator() {
       case "cost":
         return (
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-3">
               <div>
-                <div className="text-xs text-slate-500">Cost percentile</div>
-                <div className="text-lg font-semibold text-slate-950">{formatPct(userCostPercentile, 0)}</div>
+                <div className="text-xs text-muted">Cost percentile</div>
+                <div className="text-lg font-semibold text-ink">{formatPct(userCostPercentile, 0)}</div>
               </div>
               <div className="text-right">
-                <div className="text-xs text-slate-500">User AC min</div>
-                <div className="text-lg font-semibold text-slate-950">{formatMoney(firms[0].acMin, 2)}</div>
+                <div className="text-xs text-muted">User AC min</div>
+                <div className="text-lg font-semibold text-ink">{formatMoney(firms[0].acMin, 2)}</div>
               </div>
             </div>
             <div className="h-[500px]">
@@ -1013,24 +956,24 @@ export default function StiglerBarrierMarketSimulator() {
       case "time":
         return (
           <div className="space-y-4">
-            <div className="flex flex-col justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3 xl:flex-row xl:items-center">
+            <div className="flex flex-col justify-between gap-3 rounded-2xl bg-surface px-4 py-3 xl:flex-row xl:items-center">
               <div>
-                <div className="text-xs text-slate-500">User Δ share</div>
-                <div className={`text-lg font-semibold ${finalPeriod.userShare >= initialPeriod.userShare ? "text-emerald-700" : "text-rose-700"}`}>
+                <div className="text-xs text-muted">User Δ share</div>
+                <div className={`text-lg font-semibold ${deltaClass(finalPeriod.userShare - initialPeriod.userShare)}`}>
                   {finalPeriod.userShare >= initialPeriod.userShare ? "+" : ""}{formatPct(finalPeriod.userShare - initialPeriod.userShare, 1)}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                <span className="font-semibold text-slate-500">Lines</span>
-                <select
+              <div className="flex flex-wrap items-center gap-2 text-xs text-body">
+                <span className="font-semibold text-muted">Lines</span>
+                <SimSelect
                   value={timeFilter}
                   onChange={(e) => setTimeFilter(e.target.value)}
-                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm outline-none focus:border-slate-400"
+                  className="px-3 py-1.5 text-xs"
                 >
                   {TIME_FILTERS.map((option) => (
                     <option key={option.key} value={option.key}>{option.label}</option>
                   ))}
-                </select>
+                </SimSelect>
               </div>
             </div>
             <HtmlLineChart
@@ -1047,24 +990,24 @@ export default function StiglerBarrierMarketSimulator() {
       case "profit":
         return (
           <div className="space-y-4">
-            <div className="flex flex-col justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3 xl:flex-row xl:items-center">
+            <div className="flex flex-col justify-between gap-3 rounded-2xl bg-surface px-4 py-3 xl:flex-row xl:items-center">
               <div>
-                <div className="text-xs text-slate-500">User Δ profit</div>
-                <div className={`text-lg font-semibold ${(userFinal?.profit ?? 0) >= (initialPeriod.rows.find((r) => r.isUser)?.profit ?? 0) ? "text-emerald-700" : "text-rose-700"}`}>
+                <div className="text-xs text-muted">User Δ profit</div>
+                <div className={`text-lg font-semibold ${deltaClass((userFinal?.profit ?? 0) - (initialPeriod.rows.find((r) => r.isUser)?.profit ?? 0))}`}>
                   {((userFinal?.profit ?? 0) >= (initialPeriod.rows.find((r) => r.isUser)?.profit ?? 0)) ? "+" : ""}{formatMoney((userFinal?.profit ?? 0) - (initialPeriod.rows.find((r) => r.isUser)?.profit ?? 0), 0)}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                <span className="font-semibold text-slate-500">Lines</span>
-                <select
+              <div className="flex flex-wrap items-center gap-2 text-xs text-body">
+                <span className="font-semibold text-muted">Lines</span>
+                <SimSelect
                   value={timeFilter}
                   onChange={(e) => setTimeFilter(e.target.value)}
-                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm outline-none focus:border-slate-400"
+                  className="px-3 py-1.5 text-xs"
                 >
                   {TIME_FILTERS.map((option) => (
                     <option key={option.key} value={option.key}>{option.label}</option>
                   ))}
-                </select>
+                </SimSelect>
               </div>
             </div>
             <HtmlLineChart
@@ -1080,24 +1023,24 @@ export default function StiglerBarrierMarketSimulator() {
       case "marginTime":
         return (
           <div className="space-y-4">
-            <div className="flex flex-col justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3 xl:flex-row xl:items-center">
+            <div className="flex flex-col justify-between gap-3 rounded-2xl bg-surface px-4 py-3 xl:flex-row xl:items-center">
               <div>
-                <div className="text-xs text-slate-500">User Δ margin</div>
-                <div className={`text-lg font-semibold ${(userFinal?.margin ?? 0) >= (initialPeriod.rows.find((r) => r.isUser)?.margin ?? 0) ? "text-emerald-700" : "text-rose-700"}`}>
+                <div className="text-xs text-muted">User Δ margin</div>
+                <div className={`text-lg font-semibold ${deltaClass((userFinal?.margin ?? 0) - (initialPeriod.rows.find((r) => r.isUser)?.margin ?? 0))}`}>
                   {((userFinal?.margin ?? 0) >= (initialPeriod.rows.find((r) => r.isUser)?.margin ?? 0)) ? "+" : ""}{formatPct((userFinal?.margin ?? 0) - (initialPeriod.rows.find((r) => r.isUser)?.margin ?? 0), 1)}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                <span className="font-semibold text-slate-500">Lines</span>
-                <select
+              <div className="flex flex-wrap items-center gap-2 text-xs text-body">
+                <span className="font-semibold text-muted">Lines</span>
+                <SimSelect
                   value={timeFilter}
                   onChange={(e) => setTimeFilter(e.target.value)}
-                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm outline-none focus:border-slate-400"
+                  className="px-3 py-1.5 text-xs"
                 >
                   {TIME_FILTERS.map((option) => (
                     <option key={option.key} value={option.key}>{option.label}</option>
                   ))}
-                </select>
+                </SimSelect>
               </div>
             </div>
             <HtmlLineChart
@@ -1114,17 +1057,17 @@ export default function StiglerBarrierMarketSimulator() {
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3 text-sm">
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">Initial active</div>
-                <div className="text-lg font-semibold">{initialPeriod.activeCount}</div>
+              <div className="rounded-2xl bg-surface p-3">
+                <div className="text-xs text-muted">Initial active</div>
+                <div className="text-lg font-semibold text-ink">{initialPeriod.activeCount}</div>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">Final active</div>
-                <div className="text-lg font-semibold">{finalPeriod.activeCount}</div>
+              <div className="rounded-2xl bg-surface p-3">
+                <div className="text-xs text-muted">Final active</div>
+                <div className="text-lg font-semibold text-ink">{finalPeriod.activeCount}</div>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">Final HHI</div>
-                <div className="text-lg font-semibold">{finalPeriod.hhi.toFixed(3)}</div>
+              <div className="rounded-2xl bg-surface p-3">
+                <div className="text-xs text-muted">Final HHI</div>
+                <div className="text-lg font-semibold text-ink">{finalPeriod.hhi.toFixed(3)}</div>
               </div>
             </div>
             <HtmlLineChart
@@ -1150,13 +1093,13 @@ export default function StiglerBarrierMarketSimulator() {
           <div className="space-y-4">
             <ShareBars rows={staticRows} />
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">User profit</div>
-                <div className="text-lg font-semibold">{formatMoney(userStatic.profit, 0)}</div>
+              <div className="rounded-2xl bg-surface p-3">
+                <div className="text-xs text-muted">User profit</div>
+                <div className="text-lg font-semibold text-ink">{formatMoney(userStatic.profit, 0)}</div>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">Barrier wedge</div>
-                <div className={`text-lg font-semibold ${barrierWedge >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+              <div className="rounded-2xl bg-surface p-3">
+                <div className="text-xs text-muted">Barrier wedge</div>
+                <div className={`text-lg font-semibold ${deltaClass(barrierWedge)}`}>
                   {barrierWedge >= 0 ? "+" : ""}{formatMoney(barrierWedge, 2)}/unit
                 </div>
               </div>
@@ -1167,43 +1110,29 @@ export default function StiglerBarrierMarketSimulator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-5 text-slate-950 md:p-8">
-      <div className="mx-auto max-w-[1600px] space-y-6">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm">
-              <Activity className="h-3.5 w-3.5" />
-              Stigler-style barrier simulator
-            </div>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-950 md:text-5xl">
-              Cost advantage, share migration, and exit
-            </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 md:text-base">
-              Adjust your firm&apos;s variable cost and fixed cost. Competitor costs are hidden draws from the same market. Use the visual workbench to compare any two views side by side.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className="rounded-full" onClick={() => setDebugMode((v) => !v)}>
-              <Bug className="mr-2 h-4 w-4" /> {debugMode ? "Hide debug" : "Debug mode"}
-            </Button>
-            <Button variant="outline" className="rounded-full" onClick={randomizeMarket}>
-              New hidden market
-            </Button>
-            <Button className="rounded-full bg-slate-950 text-white hover:bg-slate-800" onClick={reset}>
-              <RotateCcw className="mr-2 h-4 w-4" /> Reset
-            </Button>
-          </div>
-        </div>
-
+    <div className="w-full text-body">
+      <div className="space-y-6">
         <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
-          <Card className="rounded-3xl border-slate-200 bg-white/90 shadow-sm backdrop-blur">
-            <CardContent className="space-y-6 p-5">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-5 w-5 text-slate-600" />
-                <h2 className="text-lg font-semibold">Controls</h2>
-              </div>
-
-              <Slider
+          <SimFrame
+            className="rounded-3xl"
+            eyebrow="Stigler barrier simulator"
+            title="Controls"
+            toolbar={
+              <>
+                <SimButton variant="ghost" onClick={() => setDebugMode((v) => !v)}>
+                  {debugMode ? "Hide debug" : "Debug mode"}
+                </SimButton>
+                <SimButton variant="outline" onClick={randomizeMarket}>
+                  New hidden market
+                </SimButton>
+                <SimButton variant="solid" onClick={reset}>
+                  Reset
+                </SimButton>
+              </>
+            }
+          >
+            <div className="space-y-6">
+              <SimSlider
                 label="Your variable cost, c₀"
                 value={userC}
                 min={5.2}
@@ -1215,7 +1144,7 @@ export default function StiglerBarrierMarketSimulator() {
                 comparisonLabel="Market avg c"
                 comparisonValue={formatMoney(marketAverages.c, 2)}
               />
-              <Slider
+              <SimSlider
                 label="Your fixed cost, F₀"
                 value={userF}
                 min={300}
@@ -1229,24 +1158,35 @@ export default function StiglerBarrierMarketSimulator() {
               />
 
               {debugMode && (
-                <div className="space-y-5 rounded-3xl border border-amber-200 bg-amber-50/70 p-4">
-                  <div className="flex items-center gap-2 text-amber-900">
-                    <Bug className="h-4 w-4" />
-                    <div className="text-sm font-semibold">Debug controls</div>
+                <div
+                  className="space-y-5 rounded-3xl border p-4"
+                  style={{
+                    borderColor: tint(CHART_COLOR.danger, 0.45),
+                    background: tint(CHART_COLOR.danger, 0.08),
+                  }}
+                >
+                  <div className="flex items-center gap-2 text-sm font-semibold text-danger">
+                    Debug controls
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 rounded-full bg-white/70 p-1">
-                    <DebugTabButton active={debugTab === "simulation"} onClick={() => setDebugTab("simulation")}>
+                  <SimTabs label="Debug settings" className="grid w-full grid-cols-2">
+                    <SimToggleButton
+                      active={debugTab === "simulation"}
+                      onClick={() => setDebugTab("simulation")}
+                    >
                       Simulation settings
-                    </DebugTabButton>
-                    <DebugTabButton active={debugTab === "market"} onClick={() => setDebugTab("market")}>
+                    </SimToggleButton>
+                    <SimToggleButton
+                      active={debugTab === "market"}
+                      onClick={() => setDebugTab("market")}
+                    >
                       Market settings
-                    </DebugTabButton>
-                  </div>
+                    </SimToggleButton>
+                  </SimTabs>
 
                   {debugTab === "simulation" ? (
                     <div className="space-y-4">
-                      <Slider
+                      <SimSlider
                         label="Generated competitors"
                         value={nCompetitors}
                         min={5}
@@ -1257,8 +1197,8 @@ export default function StiglerBarrierMarketSimulator() {
                       />
                       <div className="space-y-2">
                         <div>
-                          <div className="text-sm font-medium text-slate-800">Competitor distribution</div>
-                          <div className="text-xs text-slate-500">Rows are cost parameters; columns set hidden normal-draw mean and standard deviation.</div>
+                          <div className="text-sm font-medium text-ink">Competitor distribution</div>
+                          <div className="text-xs text-muted">Rows are cost parameters; columns set hidden normal-draw mean and standard deviation.</div>
                         </div>
                         <DistributionSettingsTable
                           cHat={cHat}
@@ -1274,7 +1214,7 @@ export default function StiglerBarrierMarketSimulator() {
                     </div>
                   ) : (
                     <div className="space-y-5">
-                      <Slider
+                      <SimSlider
                         label="Market price, P"
                         value={price}
                         min={9.5}
@@ -1284,7 +1224,7 @@ export default function StiglerBarrierMarketSimulator() {
                         onChange={setPrice}
                         hint="Exogenous price environment."
                       />
-                      <Slider
+                      <SimSlider
                         label="Market size, S"
                         value={marketSize}
                         min={45000}
@@ -1293,7 +1233,7 @@ export default function StiglerBarrierMarketSimulator() {
                         onChange={setMarketSize}
                         hint="Total demand allocated across firms."
                       />
-                      <Slider
+                      <SimSlider
                         label="Cost-share sensitivity, λ"
                         value={lambda}
                         min={0.25}
@@ -1302,7 +1242,7 @@ export default function StiglerBarrierMarketSimulator() {
                         onChange={setLambda}
                         hint="How strongly static share follows cost."
                       />
-                      <Slider
+                      <SimSlider
                         label="Reallocation speed, η"
                         value={eta}
                         min={0.5}
@@ -1311,7 +1251,7 @@ export default function StiglerBarrierMarketSimulator() {
                         onChange={setEta}
                         hint="How strongly margin advantages affect target shares."
                       />
-                      <Slider
+                      <SimSlider
                         label="Share adjustment damping, α"
                         value={shareAdjustment}
                         min={0.02}
@@ -1320,7 +1260,7 @@ export default function StiglerBarrierMarketSimulator() {
                         onChange={setShareAdjustment}
                         hint="Fraction of the way firms move toward target shares each period. Lower is smoother."
                       />
-                      <Slider
+                      <SimSlider
                         label="Margin signal cap, δ"
                         value={marginSignalCap}
                         min={0.02}
@@ -1334,12 +1274,12 @@ export default function StiglerBarrierMarketSimulator() {
                 </div>
               )}
 
-              <div className="rounded-2xl bg-slate-50 p-4 text-xs leading-5 text-slate-600">
-                <div className="mb-1 font-semibold text-slate-800">Hidden market assumptions</div>
+              <div className="rounded-2xl bg-surface p-4 text-xs leading-5 text-body">
+                <div className="mb-1 font-semibold text-ink">Hidden market assumptions</div>
                 Competitors draw c and F from hidden truncated normal distributions: c ~ N({formatMoney(cHat, 2)}, {formatMoney(sigmaC, 2)}²), F ~ N({formatMoney(fHat, 0)}, {formatMoney(sigmaF, 0)}²). All firms share the same scale curvature d = {HIDDEN_MARKET.d}. Exit occurs after weak margin or tiny share persists.
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </SimFrame>
 
           <div className="space-y-6">
             <div className="grid gap-6 xl:grid-cols-2">
@@ -1352,54 +1292,52 @@ export default function StiglerBarrierMarketSimulator() {
               </VisualCard>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-4">
-              <MetricCard
-                icon={TrendingUp}
-                label="Static user share"
-                value={formatPct(userStatic.share, 1)}
-                sublabel={`Rank ${userShareRank} of ${firms.length}`}
-              />
-              <MetricCard
-                icon={BarChart3}
-                label="User margin"
-                value={formatPct(userStatic.margin, 1)}
-                sublabel={`Final: ${formatPct(userFinal?.margin ?? 0, 1)}`}
-              />
-              <MetricCard
-                icon={Activity}
-                label="Market HHI"
-                value={hhiStatic.toFixed(3)}
-                sublabel={`Final: ${finalPeriod.hhi.toFixed(3)}`}
-              />
-              <MetricCard
-                icon={Skull}
-                label="Active firms"
-                value={`${activeStatic}`}
-                sublabel={`Final: ${finalPeriod.activeCount}`}
-              />
-            </div>
+            <SimFrame className="rounded-3xl">
+              <SimReadoutRow>
+                <SimReadout
+                  label="Static user share"
+                  value={formatPct(userStatic.share, 1)}
+                  sublabel={`Rank ${userShareRank} of ${firms.length}`}
+                />
+                <SimReadout
+                  label="User margin"
+                  value={formatPct(userStatic.margin, 1)}
+                  sublabel={`Final: ${formatPct(userFinal?.margin ?? 0, 1)}`}
+                />
+                <SimReadout
+                  label="Market HHI"
+                  value={hhiStatic.toFixed(3)}
+                  sublabel={`Final: ${finalPeriod.hhi.toFixed(3)}`}
+                />
+                <SimReadout
+                  label="Active firms"
+                  value={`${activeStatic}`}
+                  sublabel={`Final: ${finalPeriod.activeCount}`}
+                />
+              </SimReadoutRow>
+            </SimFrame>
 
             {debugMode && <FirmParameterTable rows={staticRows} finalRows={finalPeriod.rows} />}
 
-            <Card className="rounded-3xl border-slate-200 bg-slate-950 text-white shadow-sm">
-              <CardContent className="grid gap-5 p-5 md:grid-cols-3">
+            <SimFrame className="rounded-3xl">
+              <div className="grid gap-5 md:grid-cols-3">
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-slate-400">Cost curve</div>
-                  <div className="mt-2 font-mono text-sm text-slate-100">Cᵢ(q)=Fᵢ+cᵢq+dq²</div>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">The user controls only F₀ and c₀. Competitor draws stay hidden unless debug mode is on.</p>
+                  <div className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Cost curve</div>
+                  <div className="mt-2 font-mono text-sm text-ink">Cᵢ(q)=Fᵢ+cᵢq+dq²</div>
+                  <p className="mt-2 text-sm leading-6 text-body">The user controls only F₀ and c₀. Competitor draws stay hidden unless debug mode is on.</p>
                 </div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-slate-400">Static allocation</div>
-                  <div className="mt-2 font-mono text-sm text-slate-100">sᵢ ∝ exp(-λ ACᵢ)</div>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">Lower average cost increases the probability-like share weight.</p>
+                  <div className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Static allocation</div>
+                  <div className="mt-2 font-mono text-sm text-ink">sᵢ ∝ exp(-λ ACᵢ)</div>
+                  <p className="mt-2 text-sm leading-6 text-body">Lower average cost increases the probability-like share weight.</p>
                 </div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-slate-400">Dynamic update</div>
-                  <div className="mt-2 font-mono text-sm text-slate-100">sᵢ,t+1=(1-α)sᵢ,t+α·targetᵢ,t</div>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">Target shares use clipped margin pressure: exp(η·clip(mᵢ,t-m̄t, -δ, δ)).</p>
+                  <div className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Dynamic update</div>
+                  <div className="mt-2 font-mono text-sm text-ink">sᵢ,t+1=(1-α)sᵢ,t+α·targetᵢ,t</div>
+                  <p className="mt-2 text-sm leading-6 text-body">Target shares use clipped margin pressure: exp(η·clip(mᵢ,t-m̄t, -δ, δ)).</p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </SimFrame>
           </div>
         </div>
       </div>
